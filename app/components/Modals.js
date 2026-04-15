@@ -198,6 +198,100 @@ export function CategoryModal({ isOpen, onClose, onSave }) {
   );
 }
 
+export function IncomeModal({ isOpen, onClose, onSave }) {
+  const [desc, setDesc]       = useState('');
+  const [amount, setAmount]   = useState('');
+  const [date, setDate]       = useState('');
+  const [source, setSource]   = useState('');
+  const [cat, setCat]         = useState('');
+  const [freq, setFreq]       = useState('חוזר');
+  const [notes, setNotes]     = useState('');
+
+  const handleSave = () => {
+    if (!desc || !amount) { alert('אנא מלא תיאור וסכום'); return; }
+    onSave({
+      id: Date.now(), desc,
+      vendor: source,
+      cat,
+      type: 'fixed',
+      freq: freq === 'חוזר' ? 'recurring' : 'onetime',
+      amount: Math.abs(parseFloat(amount)),
+      date: date || new Date().toLocaleDateString('he-IL'),
+      receipt: false,
+    });
+    setDesc(''); setAmount(''); setDate(''); setSource(''); setCat(''); setNotes('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title">הכנסה חדשה</div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="field">
+              <label>תיאור ההכנסה</label>
+              <input type="text" placeholder="לדוג׳ מנויים חודשיים — אפריל" value={desc} onChange={e => setDesc(e.target.value)} />
+            </div>
+            <div className="form-row">
+              <div className="field">
+                <label>סכום (₪)</label>
+                <input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>תאריך</label>
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="field">
+                <label>מקור</label>
+                <input type="text" placeholder="לדוג׳ לקוחות / מנויים" value={source} onChange={e => setSource(e.target.value)} />
+              </div>
+              <div className="field">
+                <label>קטגוריית הכנסה</label>
+                <select value={cat} onChange={e => setCat(e.target.value)}>
+                  <option value="">-- בחר קטגוריה --</option>
+                  <option>מנויים חודשיים</option>
+                  <option>כניסות חד-פעמיות</option>
+                  <option>קורסים ושיעורים</option>
+                  <option>השכרת מתקנים</option>
+                  <option>קפיטריה וחנות</option>
+                  <option>הכנסות</option>
+                  <option>אחר</option>
+                </select>
+              </div>
+            </div>
+            <div className="field">
+              <label>תדירות</label>
+              <div className="toggle-group">
+                {['חוזר', 'חד-פעמי'].map(opt => (
+                  <button key={opt} className={`toggle-option ${freq === opt ? 'selected' : ''}`} onClick={() => setFreq(opt)}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label>הערות</label>
+              <textarea placeholder="הערות נוספות..." value={notes} onChange={e => setNotes(e.target.value)}></textarea>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-primary" style={{flex:1,justifyContent:'center',background:'var(--green)',borderColor:'var(--green)'}} onClick={handleSave}>שמור הכנסה</button>
+          <button className="btn btn-ghost" onClick={onClose}>ביטול</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ImportModal({ isOpen, onClose }) {
   return (
     <div className={`modal-overlay ${isOpen ? 'open' : ''}`} onClick={e => e.target === e.currentTarget && onClose()}>

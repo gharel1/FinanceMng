@@ -7,13 +7,15 @@ export default function ExpensesView({ expenses, onDeleteExpense }) {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filtered = expenses.filter(e => {
-    const matchesSearch = !searchQuery || 
-      e.desc.includes(searchQuery) || 
-      e.vendor.includes(searchQuery) || 
-      e.cat.includes(searchQuery);
-    const matchesType = activeFilter === 'all' || 
-      e.type === activeFilter || 
-      e.freq === activeFilter;
+    const matchesSearch = !searchQuery ||
+      e.desc?.includes(searchQuery) ||
+      e.vendor?.includes(searchQuery) ||
+      e.cat?.includes(searchQuery);
+    const matchesType =
+      activeFilter === 'all'     ? true :
+      activeFilter === 'income'  ? e.amount > 0 :
+      activeFilter === 'expense' ? e.amount < 0 :
+      e.type === activeFilter || e.freq === activeFilter;
     return matchesSearch && matchesType;
   });
 
@@ -30,8 +32,10 @@ export default function ExpensesView({ expenses, onDeleteExpense }) {
           />
         </div>
         {[
-          { id: 'all', label: 'הכל' },
-          { id: 'fixed', label: 'קבוע' },
+          { id: 'all',     label: 'הכל' },
+          { id: 'income',  label: 'הכנסות' },
+          { id: 'expense', label: 'הוצאות' },
+          { id: 'fixed',   label: 'קבוע' },
           { id: 'dynamic', label: 'משתנה' },
           { id: 'recurring', label: 'חוזר' },
           { id: 'onetime', label: 'חד-פעמי' },
@@ -48,7 +52,7 @@ export default function ExpensesView({ expenses, onDeleteExpense }) {
 
       <div className="card">
         <div className="card-header">
-          <div className="card-title"><span className="dot"></span> כל ההוצאות</div>
+          <div className="card-title"><span className="dot"></span> הכנסות והוצאות</div>
           <div style={{fontSize:12,color:'var(--text-muted)'}}>מציג {filtered.length} רשומות</div>
         </div>
         <div className="table-wrap">
