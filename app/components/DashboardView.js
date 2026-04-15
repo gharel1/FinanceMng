@@ -2,33 +2,52 @@
 
 import { RevenueChart, CategoryChart } from './Charts';
 
-export default function DashboardView({ onNavigate }) {
+function fmt(n) {
+  return Math.abs(n).toLocaleString('he-IL');
+}
+
+export default function DashboardView({ onNavigate, expenses = [], categories = [] }) {
+  const income    = expenses.filter(e => e.amount > 0).reduce((s, e) => s + e.amount, 0);
+  const totalExp  = expenses.filter(e => e.amount < 0).reduce((s, e) => s + Math.abs(e.amount), 0);
+  const profit    = income - totalExp;
+  const margin    = income > 0 ? ((profit / income) * 100).toFixed(1) : 0;
+
+  const recent = [...expenses].slice(0, 5);
+
+  // Budget progress: categories that have a budget set
+  const budgetItems = categories
+    .filter(c => c.budget > 0)
+    .slice(0, 5)
+    .map(c => ({
+      label: c.name,
+      pct: Math.round((c.total / c.budget) * 100),
+      over: c.total > c.budget,
+    }));
+
+  const isEmpty = expenses.length === 0;
+
   return (
     <>
       {/* KPIs */}
       <div className="kpi-grid">
         <div className="kpi-card gold">
-          <div className="kpi-label">הכנסות רבעוניות</div>
-          <div className="kpi-value"><span className="currency">₪</span>842,300</div>
-          <div className="kpi-delta up">▲ 12.4%</div>
+          <div className="kpi-label">הכנסות</div>
+          <div className="kpi-value"><span className="currency">₪</span>{fmt(income)}</div>
           <div className="kpi-icon">💰</div>
         </div>
         <div className="kpi-card green">
           <div className="kpi-label">רווח נקי</div>
-          <div className="kpi-value"><span className="currency">₪</span>198,740</div>
-          <div className="kpi-delta up">▲ 8.1%</div>
+          <div className="kpi-value"><span className="currency">₪</span>{fmt(profit)}</div>
           <div className="kpi-icon">📈</div>
         </div>
         <div className="kpi-card red">
           <div className="kpi-label">סך הוצאות</div>
-          <div className="kpi-value"><span className="currency">₪</span>643,560</div>
-          <div className="kpi-delta down">▲ 3.2%</div>
+          <div className="kpi-value"><span className="currency">₪</span>{fmt(totalExp)}</div>
           <div className="kpi-icon">💸</div>
         </div>
         <div className="kpi-card blue">
           <div className="kpi-label">מרווח תפעולי</div>
-          <div className="kpi-value">23.6<span className="currency">%</span></div>
-          <div className="kpi-delta up">▲ 1.8pp</div>
+          <div className="kpi-value">{margin}<span className="currency">%</span></div>
           <div className="kpi-icon">🎯</div>
         </div>
       </div>
@@ -38,11 +57,12 @@ export default function DashboardView({ onNavigate }) {
         <div className="card">
           <div className="card-header">
             <div className="card-title"><span className="dot"></span> מגמת הכנסות והוצאות</div>
-            <div style={{fontSize:11,color:'var(--text-muted)'}}>ינואר — מרץ 2026</div>
           </div>
           <div className="card-body">
             <div className="chart-wrap">
-              <RevenueChart />
+              {isEmpty
+                ? <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--text-muted)',fontSize:13}}>אין נתונים</div>
+                : <RevenueChart expenses={expenses} />}
             </div>
           </div>
         </div>
@@ -52,7 +72,9 @@ export default function DashboardView({ onNavigate }) {
           </div>
           <div className="card-body">
             <div className="chart-wrap">
-              <CategoryChart />
+              {isEmpty
+                ? <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--text-muted)',fontSize:13}}>אין נתונים</div>
+                : <CategoryChart expenses={expenses} />}
             </div>
           </div>
         </div>
@@ -66,48 +88,27 @@ export default function DashboardView({ onNavigate }) {
             <button className="btn btn-ghost" style={{fontSize:11,padding:'4px 10px'}} onClick={() => onNavigate('expenses')}>הכל</button>
           </div>
           <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>תיאור</th>
-                  <th>קטגוריה</th>
-                  <th>סכום</th>
-                  <th>תאריך</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="name">חשמל — בריכות</td>
-                  <td><span className="status-badge fixed">קבוע</span></td>
-                  <td className="amount-neg">-₪14,200</td>
-                  <td>10 אפריל</td>
-                </tr>
-                <tr>
-                  <td className="name">כלור וכימיקלים</td>
-                  <td><span className="status-badge dynamic">משתנה</span></td>
-                  <td className="amount-neg">-₪3,850</td>
-                  <td>8 אפריל</td>
-                </tr>
-                <tr>
-                  <td className="name">שכר עובדים</td>
-                  <td><span className="status-badge fixed">קבוע</span></td>
-                  <td className="amount-neg">-₪68,000</td>
-                  <td>1 אפריל</td>
-                </tr>
-                <tr>
-                  <td className="name">הכנסות מנויים</td>
-                  <td><span className="status-badge recurring">חוזר</span></td>
-                  <td className="amount-pos">+₪92,400</td>
-                  <td>1 אפריל</td>
-                </tr>
-                <tr>
-                  <td className="name">תחזוקת ציוד</td>
-                  <td><span className="status-badge dynamic">משתנה</span></td>
-                  <td className="amount-neg">-₪7,300</td>
-                  <td>28 מרץ</td>
-                </tr>
-              </tbody>
-            </table>
+            {isEmpty ? (
+              <div style={{padding:'24px',textAlign:'center',color:'var(--text-muted)',fontSize:13}}>עדיין אין הוצאות מוזנות</div>
+            ) : (
+              <table>
+                <thead>
+                  <tr><th>תיאור</th><th>קטגוריה</th><th>סכום</th><th>תאריך</th></tr>
+                </thead>
+                <tbody>
+                  {recent.map(e => (
+                    <tr key={e.id}>
+                      <td className="name">{e.desc}</td>
+                      <td><span className="status-badge fixed">{e.cat}</span></td>
+                      <td className={e.amount >= 0 ? 'amount-pos' : 'amount-neg'}>
+                        {e.amount >= 0 ? '+' : '-'}₪{fmt(e.amount)}
+                      </td>
+                      <td>{e.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -116,34 +117,30 @@ export default function DashboardView({ onNavigate }) {
             <div className="card-title"><span className="dot"></span> ביצוע מול תקציב</div>
           </div>
           <div className="card-body">
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {[
-                { label: 'שכר עובדים', pct: 82, color: 'var(--green)', over: false },
-                { label: 'חשמל ואנרגיה', pct: 108, color: 'var(--red)', over: true },
-                { label: 'שיווק ופרסום', pct: 61, color: null, over: false },
-                { label: 'תחזוקה', pct: 45, color: null, over: false },
-                { label: 'כימיקלים וחומרים', pct: 73, color: null, over: false },
-              ].map((item, i) => (
-                <div key={i}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:6}}>
-                    <span style={{color:'var(--text-secondary)'}}>{item.label}</span>
-                    <span style={{color: item.over ? 'var(--red)' : 'var(--text-primary)',fontWeight:700}}>
-                      {item.pct}% <span style={{color:'var(--text-muted)',fontWeight:400}}>מהתקציב</span>
-                    </span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{
-                      width: `${Math.min(item.pct, 100)}%`,
-                      background: item.over 
-                        ? 'linear-gradient(90deg,var(--amber),var(--red))'
-                        : item.color 
-                          ? `linear-gradient(90deg,${item.color},${item.color})`
+            {budgetItems.length === 0 ? (
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--text-muted)',fontSize:13}}>עדיין אין קטגוריות עם תקציב</div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                {budgetItems.map((item, i) => (
+                  <div key={i}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:6}}>
+                      <span style={{color:'var(--text-secondary)'}}>{item.label}</span>
+                      <span style={{color: item.over ? 'var(--red)' : 'var(--text-primary)',fontWeight:700}}>
+                        {item.pct}% <span style={{color:'var(--text-muted)',fontWeight:400}}>מהתקציב</span>
+                      </span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{
+                        width: `${Math.min(item.pct, 100)}%`,
+                        background: item.over
+                          ? 'linear-gradient(90deg,var(--amber),var(--red))'
                           : undefined
-                    }}></div>
+                      }}></div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

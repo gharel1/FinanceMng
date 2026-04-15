@@ -96,9 +96,9 @@ export default function Home() {
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardView onNavigate={handleNavigate} />;
+        return <DashboardView onNavigate={handleNavigate} expenses={expenses} categories={categories} />;
       case 'pnl':
-        return <PnlView />;
+        return <PnlView expenses={expenses} />;
       case 'expenses':
         return <ExpensesView expenses={expenses} onDeleteExpense={handleDeleteExpense} />;
       case 'categories':
@@ -114,7 +114,7 @@ export default function Home() {
       case 'recommendations':
         return <RecommendationsView />;
       case 'budget':
-        return <BudgetView />;
+        return <BudgetView categories={categories} expenses={expenses} />;
       case 'reports':
         return <ReportsView />;
       default:
