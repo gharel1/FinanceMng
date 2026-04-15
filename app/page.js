@@ -10,7 +10,7 @@ import OnedriveView from './components/OnedriveView';
 import RecommendationsView from './components/RecommendationsView';
 import BudgetView from './components/BudgetView';
 import ReportsView from './components/ReportsView';
-import { ExpenseModal, IncomeModal, CategoryModal, ImportModal } from './components/Modals';
+import { ExpenseModal, CategoryModal, ImportModal } from './components/Modals';
 import LoginView from './components/LoginView';
 import { pageTitles } from './data/financialData';
 import { supabase } from '../lib/supabase';
@@ -61,7 +61,6 @@ export default function Home() {
   }, [session]);
 
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
-  const [incomeModalOpen, setIncomeModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -71,11 +70,6 @@ export default function Home() {
 
   const handleSaveExpense = async (expense) => {
     const saved = await addExpense(expense);
-    setExpenses(prev => [saved, ...prev]);
-  };
-
-  const handleSaveIncome = async (income) => {
-    const saved = await addExpense(income);
     setExpenses(prev => [saved, ...prev]);
   };
 
@@ -149,8 +143,7 @@ export default function Home() {
               <option value="q3_2025">Q3 2025</option>
               <option value="2025">כל שנת 2025</option>
             </select>
-            <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ ייבוא</button>
-            <button className="btn btn-ghost" style={{color:'var(--green)',borderColor:'var(--green)'}} onClick={() => setIncomeModalOpen(true)}>+ הכנסה חדשה</button>
+            <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ ייבוא דוח הכנסות</button>
             <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>+ הוצאה חדשה</button>
             <button className="btn btn-ghost" onClick={() => supabase.auth.signOut()} style={{ color: 'var(--text-muted)' }} title={session?.user?.email}>יציאה</button>
           </div>
@@ -174,11 +167,6 @@ export default function Home() {
         onClose={() => setExpenseModalOpen(false)}
         onSave={handleSaveExpense}
       />
-      <IncomeModal
-        isOpen={incomeModalOpen}
-        onClose={() => setIncomeModalOpen(false)}
-        onSave={handleSaveIncome}
-      />
       <CategoryModal
         isOpen={categoryModalOpen}
         onClose={() => setCategoryModalOpen(false)}
@@ -187,6 +175,10 @@ export default function Home() {
       <ImportModal
         isOpen={importModalOpen}
         onClose={() => setImportModalOpen(false)}
+        onImport={async (rows) => {
+          const saved = await Promise.all(rows.map(r => addExpense(r)));
+          setExpenses(prev => [...saved, ...prev]);
+        }}
       />
     </div>
   );
