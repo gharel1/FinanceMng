@@ -64,3 +64,23 @@ insert into receipts (name, "date", amount, status) values
   ('גוגל_אדס_פבר.pdf',     '28/02/2026', '₪3,200',  'pending'),
   ('חשמל_פבר_2026.pdf',    '10/02/2026', '₪13,850', 'processed'),
   ('ספק_כלים_2026.pdf',    '05/03/2026', '₪4,100',  'pending');
+
+-- ── ROW LEVEL SECURITY ────────────────────────────────────
+-- Run this AFTER the inserts above so the seed data is not blocked.
+
+alter table expenses  enable row level security;
+alter table categories enable row level security;
+alter table receipts  enable row level security;
+
+-- Only authenticated users can read or write any row.
+create policy "auth_read_expenses"      on expenses  for select using (auth.role() = 'authenticated');
+create policy "auth_insert_expenses"    on expenses  for insert with check (auth.role() = 'authenticated');
+create policy "auth_delete_expenses"    on expenses  for delete using (auth.role() = 'authenticated');
+
+create policy "auth_read_categories"    on categories for select using (auth.role() = 'authenticated');
+create policy "auth_insert_categories"  on categories for insert with check (auth.role() = 'authenticated');
+create policy "auth_delete_categories"  on categories for delete using (auth.role() = 'authenticated');
+
+create policy "auth_read_receipts"      on receipts  for select using (auth.role() = 'authenticated');
+create policy "auth_insert_receipts"    on receipts  for insert with check (auth.role() = 'authenticated');
+create policy "auth_delete_receipts"    on receipts  for delete using (auth.role() = 'authenticated');

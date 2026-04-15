@@ -11,7 +11,9 @@ import RecommendationsView from './components/RecommendationsView';
 import BudgetView from './components/BudgetView';
 import ReportsView from './components/ReportsView';
 import { ExpenseModal, CategoryModal, ImportModal } from './components/Modals';
+import LoginView from './components/LoginView';
 import { pageTitles } from './data/financialData';
+import { supabase } from '../lib/supabase';
 import {
   getExpenses, addExpense, deleteExpense,
   getCategories, addCategory, deleteCategory,
@@ -19,13 +21,26 @@ import {
 } from '../lib/db';
 
 export default function Home() {
+  const [session, setSession] = useState(undefined); // undefined = checking, null = logged out
   const [activeView, setActiveView] = useState('dashboard');
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [pdfs, setPdfs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Auth: check session on mount and listen for changes
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) { setExpenses([]); setCategories([]); setPdfs([]); setLoading(true); }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Data: load only when authenticated
+  useEffect(() => {
+    if (!session) return;
     async function loadData() {
       try {
         const [exp, cats, recs] = await Promise.all([
@@ -43,7 +58,7 @@ export default function Home() {
       }
     }
     loadData();
-  }, []);
+  }, [session]);
 
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -107,6 +122,12 @@ export default function Home() {
     }
   };
 
+  // Still determining auth state
+  if (session === undefined) return null;
+
+  // Not logged in — show login screen
+  if (!session) return <LoginView />;
+
   return (
     <div className="app">
       <Sidebar activeView={activeView} onNavigate={handleNavigate} />
@@ -124,6 +145,7 @@ export default function Home() {
             </select>
             <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ ייבוא</button>
             <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>+ הוצאה חדשה</button>
+            <button className="btn btn-ghost" onClick={() => supabase.auth.signOut()} style={{ color: 'var(--text-muted)' }} title={session?.user?.email}>יציאה</button>
           </div>
         </div>
 
