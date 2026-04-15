@@ -19,13 +19,13 @@ export default function Sidebar({ activeView, onNavigate }) {
 
   return (
     <nav className="sidebar">
-      <div className="logo">
+      <div className="logo" style={{ padding: '16px 20px 12px' }}>
         <Image
           src="/Multipool Logo.png"
           alt="מולטיפול"
-          width={180}
-          height={72}
-          style={{ objectFit: 'contain', borderRadius: 6, background: '#fff', padding: '6px 8px' }}
+          width={200}
+          height={200}
+          style={{ objectFit: 'contain', width: '100%', height: 'auto', borderRadius: 8, background: '#fff' }}
           priority
         />
         <div className="logo-sub" style={{ paddingRight: 0, marginTop: 6 }}>CFO DASHBOARD</div>
