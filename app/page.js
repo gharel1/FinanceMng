@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DashboardView from './components/DashboardView';
 import PnlView from './components/PnlView';
@@ -11,18 +11,39 @@ import RecommendationsView from './components/RecommendationsView';
 import BudgetView from './components/BudgetView';
 import ReportsView from './components/ReportsView';
 import { ExpenseModal, CategoryModal, ImportModal } from './components/Modals';
+import { pageTitles } from './data/financialData';
 import {
-  initialExpenses,
-  initialCategories,
-  initialPdfs,
-  pageTitles,
-} from './data/financialData';
+  getExpenses, addExpense, deleteExpense,
+  getCategories, addCategory, deleteCategory,
+  getReceipts, addReceipts,
+} from '../lib/db';
 
 export default function Home() {
   const [activeView, setActiveView] = useState('dashboard');
-  const [expenses, setExpenses] = useState([...initialExpenses]);
-  const [categories, setCategories] = useState([...initialCategories]);
-  const [pdfs, setPdfs] = useState([...initialPdfs]);
+  const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [pdfs, setPdfs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [exp, cats, recs] = await Promise.all([
+          getExpenses(),
+          getCategories(),
+          getReceipts(),
+        ]);
+        setExpenses(exp);
+        setCategories(cats);
+        setPdfs(recs);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -32,24 +53,29 @@ export default function Home() {
     setActiveView(view);
   };
 
-  const handleSaveExpense = (expense) => {
-    setExpenses(prev => [expense, ...prev]);
+  const handleSaveExpense = async (expense) => {
+    const saved = await addExpense(expense);
+    setExpenses(prev => [saved, ...prev]);
   };
 
-  const handleDeleteExpense = (id) => {
+  const handleDeleteExpense = async (id) => {
+    await deleteExpense(id);
     setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
-  const handleSaveCategory = (category) => {
-    setCategories(prev => [...prev, category]);
+  const handleSaveCategory = async (category) => {
+    const saved = await addCategory(category);
+    setCategories(prev => [...prev, saved]);
   };
 
-  const handleDeleteCategory = (index) => {
-    setCategories(prev => prev.filter((_, i) => i !== index));
+  const handleDeleteCategory = async (id) => {
+    await deleteCategory(id);
+    setCategories(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleAddPdfs = (newPdfs) => {
-    setPdfs(prev => [...newPdfs, ...prev]);
+  const handleAddPdfs = async (newPdfs) => {
+    const saved = await addReceipts(newPdfs);
+    setPdfs(prev => [...saved, ...prev]);
   };
 
   const renderView = () => {
@@ -104,7 +130,11 @@ export default function Home() {
         {/* CONTENT */}
         <div className="content">
           <div className={`view active`}>
-            {renderView()}
+            {loading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 14 }}>
+                טוען נתונים...
+              </div>
+            ) : renderView()}
           </div>
         </div>
       </div>

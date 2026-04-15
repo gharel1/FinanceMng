@@ -37,7 +37,7 @@ export default function CategoriesView({ categories, onDeleteCategory, onOpenCat
                 <div className="cat-icon" style={{background:`${c.color}22`,color:c.color,fontSize:20}}>{c.icon}</div>
                 <div className="cat-actions">
                   <div className="cat-action">✏️</div>
-                  <div className="cat-action" onClick={() => onDeleteCategory(i)}>🗑</div>
+                  <div className="cat-action" onClick={() => onDeleteCategory(c.id)}>🗑</div>
                 </div>
               </div>
               <div className="cat-name">{c.name}</div>
