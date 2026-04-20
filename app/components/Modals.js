@@ -65,6 +65,7 @@ export function ExpenseModal({ isOpen, onClose, onSave }) {
                   <option>כימיקלים וחומרים</option>
                   <option>שיווק ופרסום</option>
                   <option>ביטוח</option>
+                  <option>הוצאות משרד</option>
                   <option>אחר</option>
                 </select>
               </div>
