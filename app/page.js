@@ -143,7 +143,7 @@ export default function Home() {
               <option value="q3_2025">Q3 2025</option>
               <option value="2025">כל שנת 2025</option>
             </select>
-            <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ ייבוא דוח הכנסות</button>
+            <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ הכנסות חודשיות</button>
             <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>+ הוצאה חדשה</button>
             <button className="btn btn-ghost" onClick={() => supabase.auth.signOut()} style={{ color: 'var(--text-muted)' }} title={session?.user?.email}>יציאה</button>
           </div>
