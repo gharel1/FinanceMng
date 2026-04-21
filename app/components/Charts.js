@@ -49,7 +49,7 @@ export function RevenueChart({ expenses = [] }) {
     expenses.forEach(e => {
       const k = monthKey(e.date);
       if (!months[k]) months[k] = { revenue: 0, expenses: 0 };
-      if (e.amount > 0) months[k].revenue  += e.amount;
+      if (e.amount > 0) months[k].revenue  += (e.taxable ?? e.amount);
       else              months[k].expenses += Math.abs(e.amount);
     });
 
@@ -140,7 +140,7 @@ export function PnlChart({ expenses = [] }) {
     expenses.forEach(e => {
       const k = monthKey(e.date);
       if (!months[k]) months[k] = { revenue: 0, expenses: 0 };
-      if (e.amount > 0) months[k].revenue  += e.amount;
+      if (e.amount > 0) months[k].revenue  += (e.taxable ?? e.amount);
       else              months[k].expenses += Math.abs(e.amount);
     });
 

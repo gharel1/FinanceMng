@@ -7,17 +7,19 @@ function fmt(n) {
 }
 
 export default function PnlView({ expenses = [] }) {
-  const income   = expenses.filter(e => e.amount > 0).reduce((s, e) => s + e.amount, 0);
+  // Use taxable (pre-VAT) amount for income rows when available
+  const incomeNet = e => e.amount > 0 ? (e.taxable ?? e.amount) : 0;
+  const income   = expenses.filter(e => e.amount > 0).reduce((s, e) => s + incomeNet(e), 0);
   const totalExp = expenses.filter(e => e.amount < 0).reduce((s, e) => s + Math.abs(e.amount), 0);
   const profit   = income - totalExp;
   const margin   = income > 0 ? ((profit / income) * 100).toFixed(1) : 0;
   const expPct   = income > 0 ? ((totalExp / income) * 100).toFixed(1) : 0;
 
-  // Group income sources
+  // Group income sources (pre-VAT)
   const incomeSources = expenses
     .filter(e => e.amount > 0)
     .reduce((acc, e) => {
-      acc[e.cat] = (acc[e.cat] || 0) + e.amount;
+      acc[e.cat] = (acc[e.cat] || 0) + incomeNet(e);
       return acc;
     }, {});
 

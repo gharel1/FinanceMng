@@ -231,13 +231,13 @@ export function ImportModal({ isOpen, onClose, onImport }) {
         type:    'fixed',
         freq:    'recurring',
         amount:  parseFloat(total.toString().replace(/[₪,]/g, '')),
+        taxable: taxable ? parseFloat(taxable.toString().replace(/[₪,]/g, '')) : null,
         date:    dateStr,
         receipt: false,
         notes:   [
-          taxable ? `חייב במע"מ: ₪${parseFloat(taxable).toLocaleString()}` : '',
-          vat     ? `מע"מ: ₪${parseFloat(vat).toLocaleString()}` : '',
+          vat ? `מע"מ: ₪${parseFloat(vat).toLocaleString()}` : '',
           notes,
-        ].filter(Boolean).join(' | '),
+        ].filter(Boolean).join(' | ') || null,
       };
       await onImport([row]);
       setDone(true);

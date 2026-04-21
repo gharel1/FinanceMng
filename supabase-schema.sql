@@ -9,7 +9,8 @@ create table if not exists expenses (
   amount  numeric         not null,
   "date"  text,
   receipt boolean         default false,
-  notes   text
+  notes   text,
+  taxable numeric
 );
 
 -- ── CATEGORIES ────────────────────────────────────────────
