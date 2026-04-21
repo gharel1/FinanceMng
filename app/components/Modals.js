@@ -58,15 +58,16 @@ export function ExpenseModal({ isOpen, onClose, onSave }) {
                 <label>קטגוריה</label>
                 <select value={cat} onChange={e => setCat(e.target.value)}>
                   <option value="">-- בחר קטגוריה --</option>
-                  <option>שכר עובדים</option>
-                  <option>חשמל ואנרגיה</option>
-                  <option>שכירות</option>
-                  <option>תחזוקה ותיקונים</option>
-                  <option>כימיקלים וחומרים</option>
-                  <option>שיווק ופרסום</option>
+                  <option>אחר</option>
                   <option>ביטוח</option>
                   <option>הוצאות משרד</option>
-                  <option>אחר</option>
+                  <option>חשמל ואנרגיה</option>
+                  <option>כימיקלים וחומרים</option>
+                  <option>שיווק ופרסום</option>
+                  <option>שכירות</option>
+                  <option>שכר עובדים</option>
+                  <option>שכר פרילנסר</option>
+                  <option>תחזוקה ותיקונים</option>
                 </select>
               </div>
             </div>
