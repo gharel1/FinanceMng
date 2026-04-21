@@ -8,7 +8,8 @@ create table if not exists expenses (
   freq    text,
   amount  numeric         not null,
   "date"  text,
-  receipt boolean         default false
+  receipt boolean         default false,
+  notes   text
 );
 
 -- ── CATEGORIES ────────────────────────────────────────────
