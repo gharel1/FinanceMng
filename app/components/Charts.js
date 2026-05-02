@@ -25,10 +25,13 @@ ChartJS.register(
 ChartJS.defaults.font.family = "'Heebo', sans-serif";
 ChartJS.defaults.color = '#8a95b0';
 
-// Parse DD/MM/YYYY → "MM/YYYY" label
+// Parse DD/MM/YYYY → "MM/YYYY" label, returns null for invalid input
 function monthKey(dateStr) {
-  if (!dateStr) return 'לא ידוע';
-  const [, mm, yyyy] = dateStr.split('/');
+  if (!dateStr) return null;
+  const parts = dateStr.split('/');
+  if (parts.length < 3) return null;
+  const mm = parts[1], yyyy = parts[2];
+  if (!mm || !yyyy || isNaN(parseInt(mm, 10)) || isNaN(parseInt(yyyy, 10))) return null;
   return `${mm}/${yyyy}`;
 }
 
@@ -48,12 +51,17 @@ export function RevenueChart({ expenses = [] }) {
     const months = {};
     expenses.forEach(e => {
       const k = monthKey(e.date);
+      if (!k) return;
       if (!months[k]) months[k] = { revenue: 0, expenses: 0 };
       if (e.amount > 0) months[k].revenue  += (e.taxable ?? e.amount);
       else              months[k].expenses += Math.abs(e.amount);
     });
 
-    const labels = Object.keys(months);
+    const labels = Object.keys(months).sort((a, b) => {
+      const [am, ay] = a.split('/');
+      const [bm, by] = b.split('/');
+      return (parseInt(ay, 10) * 12 + parseInt(am, 10)) - (parseInt(by, 10) * 12 + parseInt(bm, 10));
+    });
     const ctx = canvasRef.current.getContext('2d');
     const gradRev = ctx.createLinearGradient(0, 0, 0, 220);
     gradRev.addColorStop(0, 'rgba(201,168,76,0.2)');
@@ -139,12 +147,17 @@ export function PnlChart({ expenses = [] }) {
     const months = {};
     expenses.forEach(e => {
       const k = monthKey(e.date);
+      if (!k) return;
       if (!months[k]) months[k] = { revenue: 0, expenses: 0 };
       if (e.amount > 0) months[k].revenue  += (e.taxable ?? e.amount);
       else              months[k].expenses += Math.abs(e.amount);
     });
 
-    const labels  = Object.keys(months);
+    const labels = Object.keys(months).sort((a, b) => {
+      const [am, ay] = a.split('/');
+      const [bm, by] = b.split('/');
+      return (parseInt(ay, 10) * 12 + parseInt(am, 10)) - (parseInt(by, 10) * 12 + parseInt(bm, 10));
+    });
     const revenue = labels.map(k => months[k].revenue);
     const exps    = labels.map(k => months[k].expenses);
     const profit  = labels.map((_, i) => revenue[i] - exps[i]);

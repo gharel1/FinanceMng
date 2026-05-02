@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import Sidebar from './components/Sidebar';
 import DashboardView from './components/DashboardView';
 import PnlView from './components/PnlView';
@@ -19,6 +20,51 @@ import {
   getCategories, addCategory, deleteCategory,
   getReceipts, addReceipts,
 } from '../lib/db';
+
+function getCurrentQuarterInfo() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  return { quarter: Math.ceil(month / 3), year: now.getFullYear() };
+}
+
+function buildPeriodOptions() {
+  const { quarter, year } = getCurrentQuarterInfo();
+  const options = [];
+  let q = quarter, y = year;
+  for (let i = 0; i < 6; i++) {
+    options.push({ value: `q${q}_${y}`, label: `Q${q} ${y}` });
+    q--;
+    if (q === 0) { q = 4; y--; }
+  }
+  options.push({ value: `year_${year - 1}`, label: `כל שנת ${year - 1}` });
+  return options;
+}
+
+function filterByPeriod(expenses, period) {
+  if (!period) return expenses;
+  const qm = period.match(/^q(\d)_(\d{4})$/);
+  if (qm) {
+    const q = parseInt(qm[1]), yr = parseInt(qm[2]);
+    const startM = (q - 1) * 3 + 1, endM = startM + 2;
+    return expenses.filter(e => {
+      if (!e.date) return false;
+      const p = e.date.split('/');
+      if (p.length < 3) return false;
+      const m = parseInt(p[1], 10), y = parseInt(p[2], 10);
+      return y === yr && m >= startM && m <= endM;
+    });
+  }
+  const ym = period.match(/^year_(\d{4})$/);
+  if (ym) {
+    const yr = parseInt(ym[1]);
+    return expenses.filter(e => {
+      if (!e.date) return false;
+      const p = e.date.split('/');
+      return p.length >= 3 && parseInt(p[2], 10) === yr;
+    });
+  }
+  return expenses;
+}
 
 export default function Home() {
   const [session, setSession] = useState(undefined); // undefined = checking, null = logged out
@@ -60,6 +106,23 @@ export default function Home() {
     loadData();
   }, [session]);
 
+  const periodOptions = buildPeriodOptions();
+  const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[0].value);
+
+  // Only keep periods that contain at least one expense; always keep current quarter (index 0)
+  const availableOptions = loading
+    ? periodOptions
+    : periodOptions.filter((opt, idx) => idx === 0 || filterByPeriod(expenses, opt.value).length > 0);
+
+  // After data loads, reset to current quarter if the selection has no data
+  useEffect(() => {
+    if (!loading && !availableOptions.find(o => o.value === selectedPeriod)) {
+      setSelectedPeriod(availableOptions[0].value);
+    }
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const filteredExpenses = filterByPeriod(expenses, selectedPeriod);
+
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -96,9 +159,9 @@ export default function Home() {
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardView onNavigate={handleNavigate} expenses={expenses} categories={categories} />;
+        return <DashboardView onNavigate={handleNavigate} expenses={filteredExpenses} categories={categories} />;
       case 'pnl':
-        return <PnlView expenses={expenses} />;
+        return <PnlView expenses={filteredExpenses} />;
       case 'expenses':
         return <ExpensesView expenses={expenses} onDeleteExpense={handleDeleteExpense} />;
       case 'categories':
@@ -137,11 +200,14 @@ export default function Home() {
         <div className="topbar">
           <div className="page-title">{pageTitles[activeView] || activeView}</div>
           <div className="topbar-actions">
-            <select className="period-select" defaultValue="q1_2026">
-              <option value="q1_2026">Q1 2026</option>
-              <option value="q4_2025">Q4 2025</option>
-              <option value="q3_2025">Q3 2025</option>
-              <option value="2025">כל שנת 2025</option>
+            <select
+              className="period-select"
+              value={selectedPeriod}
+              onChange={e => setSelectedPeriod(e.target.value)}
+            >
+              {availableOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
             <button className="btn btn-ghost" onClick={() => setImportModalOpen(true)}>⬆ הכנסות חודשיות</button>
             <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>+ הוצאה חדשה</button>
