@@ -1,7 +1,15 @@
 'use client';
 import Image from 'next/image';
 
+function getCurrentPeriod() {
+  const now = new Date();
+  const q = Math.ceil((now.getMonth() + 1) / 3);
+  const label = now.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return { quarter: `Q${q} ${now.getFullYear()}`, updated: label };
+}
+
 export default function Sidebar({ activeView, onNavigate }) {
+  const { quarter, updated } = getCurrentPeriod();
   const navItems = [
     { section: 'ניהול', items: [
       { id: 'dashboard', icon: '📊', label: 'לוח בקרה' },
@@ -59,8 +67,8 @@ export default function Sidebar({ activeView, onNavigate }) {
 
       <div className="sidebar-footer">
         <div className="fiscal-period">רבעון נוכחי</div>
-        <div className="fiscal-value">Q1 2026</div>
-        <div style={{marginTop:8,fontSize:11,color:'var(--text-muted)'}}>עודכן: 14 באפריל 2026</div>
+        <div className="fiscal-value">{quarter}</div>
+        <div style={{marginTop:8,fontSize:11,color:'var(--text-muted)'}}>עודכן: {updated}</div>
       </div>
     </nav>
   );
