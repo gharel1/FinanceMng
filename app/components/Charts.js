@@ -25,9 +25,13 @@ ChartJS.register(
 ChartJS.defaults.font.family = "'Heebo', sans-serif";
 ChartJS.defaults.color = '#8a95b0';
 
-// Parse DD/MM/YYYY → "MM/YYYY" label, returns null for invalid input
+// Parse date to "MM/YYYY" label; handles DD/MM/YYYY and YYYY-MM-DD
 function monthKey(dateStr) {
   if (!dateStr) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const [yyyy, mm] = dateStr.split('-');
+    return `${mm}/${yyyy}`;
+  }
   const parts = dateStr.split('/');
   if (parts.length < 3) return null;
   const mm = parts[1], yyyy = parts[2];

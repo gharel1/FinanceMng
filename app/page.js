@@ -40,6 +40,18 @@ function buildPeriodOptions() {
   return options;
 }
 
+// Handles both DD/MM/YYYY (income entries) and YYYY-MM-DD (expense date input)
+function parseDateMY(dateStr) {
+  if (!dateStr) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const p = dateStr.split('-');
+    return { month: parseInt(p[1], 10), year: parseInt(p[0], 10) };
+  }
+  const p = dateStr.split('/');
+  if (p.length === 3) return { month: parseInt(p[1], 10), year: parseInt(p[2], 10) };
+  return null;
+}
+
 function filterByPeriod(expenses, period) {
   if (!period) return expenses;
   const qm = period.match(/^q(\d)_(\d{4})$/);
@@ -47,20 +59,16 @@ function filterByPeriod(expenses, period) {
     const q = parseInt(qm[1]), yr = parseInt(qm[2]);
     const startM = (q - 1) * 3 + 1, endM = startM + 2;
     return expenses.filter(e => {
-      if (!e.date) return false;
-      const p = e.date.split('/');
-      if (p.length < 3) return false;
-      const m = parseInt(p[1], 10), y = parseInt(p[2], 10);
-      return y === yr && m >= startM && m <= endM;
+      const d = parseDateMY(e.date);
+      return d && d.year === yr && d.month >= startM && d.month <= endM;
     });
   }
   const ym = period.match(/^year_(\d{4})$/);
   if (ym) {
     const yr = parseInt(ym[1]);
     return expenses.filter(e => {
-      if (!e.date) return false;
-      const p = e.date.split('/');
-      return p.length >= 3 && parseInt(p[2], 10) === yr;
+      const d = parseDateMY(e.date);
+      return d && d.year === yr;
     });
   }
   return expenses;
